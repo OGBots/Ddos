@@ -76,31 +76,39 @@ def generate_command(message):
 def redeem_code(message):
     user_id = str(message.chat.id)
     command_parts = message.text.split()
+
     if len(command_parts) < 2:
-        bot.reply_to(message, "Usage: /redeem <code>")
+        bot.reply_to(message, "⚠️ Usage: /redeem <code>")
         return
 
     code = command_parts[1]
     found = False
     new_codes = []
 
-    with open(CODES_FILE, "r") as file:
-        lines = file.readlines()
-    
-    for line in lines:
-        stored_code, expiry = line.strip().split()
-        if stored_code == code:
-            found = True
-            user_access[user_id] = expiry  # 🚨 This was causing the error
-            bot.reply_to(message, f"✅ Redeemed! Access granted until {expiry}.")
+    try:
+        with open(CODES_FILE, "r") as file:
+            lines = file.readlines()
+
+        for line in lines:
+            stored_code, expiry = line.strip().split()
+            
+            if stored_code == code:
+                found = True
+                user_access[user_id] = expiry
+                bot.reply_to(message, f"✅ Redeemed! Access granted until {expiry}.")
+            else:
+                new_codes.append(line)  # Keep other codes in the file
+
+        if found:
+            with open(CODES_FILE, "w") as file:
+                file.writelines(new_codes)
         else:
-            new_codes.append(line)
-    
-    if found:
-        with open(CODES_FILE, "w") as file:
-            file.writelines(new_codes)
-    else:
-        bot.reply_to(message, "Invalid or already used code.")
+            bot.reply_to(message, "❌ Invalid or already used code.")
+
+    except FileNotFoundError:
+        bot.reply_to(message, "❌ No codes available.")
+    except Exception as e:
+        bot.reply_to(message, f"⚠️ Error: {str(e)}")
 
 
 # Check access command
