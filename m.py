@@ -19,6 +19,71 @@ USER_FILE = "users.txt"
 # File to store command logs
 LOG_FILE = "log.txt"
 
+# Function to generate codes
+def generate_codes(count, days):
+    codes = []
+    for _ in range(count):
+        code = "OG-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        expiry_date = (datetime.datetime.now() + datetime.timedelta(days=days)).strftime('%Y-%m-%d')
+        codes.append(f"{code} {expiry_date}\n")
+    
+    with open(CODES_FILE, "a") as file:
+        file.writelines(codes)
+    return codes
+
+# Command for admin to generate redeem codes
+@bot.message_handler(commands=['gen'])
+def generate_command(message):
+    user_id = str(message.chat.id)
+    if user_id in admin_id:
+        try:
+            _, count, days = message.text.split()
+            count, days = int(count), int(days)
+            codes = generate_codes(count, days)
+            bot.reply_to(message, "Generated Codes:\n" + '\n'.join(codes))
+        except:
+            bot.reply_to(message, "Usage: /gen <count> <days>")
+    else:
+        bot.reply_to(message, "You are not authorized to generate codes.")
+
+# Command for users to redeem codes
+@bot.message_handler(commands=['redeem'])
+def redeem_code(message):
+    user_id = str(message.chat.id)
+    command_parts = message.text.split()
+    if len(command_parts) < 2:
+        bot.reply_to(message, "Usage: /redeem <code>")
+        return
+
+    code = command_parts[1]
+    found = False
+    new_codes = []
+
+    with open(CODES_FILE, "r") as file:
+        lines = file.readlines()
+    
+    for line in lines:
+        stored_code, expiry = line.strip().split()
+        if stored_code == code:
+            found = True
+            user_access[user_id] = expiry
+            bot.reply_to(message, f"✅ Redeemed! Access granted until {expiry}.")
+        else:
+            new_codes.append(line)
+    
+    if found:
+        with open(CODES_FILE, "w") as file:
+            file.writelines(new_codes)
+    else:
+        bot.reply_to(message, "Invalid or already used code.")
+
+# Check access command
+@bot.message_handler(commands=['myinfo'])
+def check_access(message):
+    user_id = str(message.chat.id)
+    expiry = user_access.get(user_id, "No active access")
+    bot.reply_to(message, f"Your access expires on: {expiry}")
+
 
 # Function to read user IDs from the file
 def read_users():
@@ -356,18 +421,19 @@ def show_command_logs(message):
 
 @bot.message_handler(commands=['help'])
 def show_help(message):
-    help_text ='''🤖 Available commands:
-🍁 /bgmi : Method For Bgmi Servers. 
-🍁 /rules : Please Check Before Use !!.
-🍁 /mylogs : To Check Your Recents Attacks.
-🍁 /plan : Checkout Our Botnet Rates.
-🍁 /myinfo : TO Check Your WHOLE INFO.
+    help_text = '''🤖 Available Commands:
+🍁 /bgmi <target> <port> <time> - Attack BGMI servers.
+🍁 /rules - Check before using the bot.
+🍁 /mylogs - View your recent attacks.
+🍁 /plan - View botnet rates.
+🍁 /myinfo - Check your info.
+🍁 /redeem <code> - Redeem a code for access.
+🍁 /help - Show this help menu.
 
-🤖 To See Admin Commands:
-🍁 /admincmd : Shows All Admin Commands.
-
-Buy From :- @SatsNova
+💰 Buy access: @SatsNova
 TeamOG GLADIATOR ☠️
+'''
+    bot.reply_to(message, help_text)
 '''
     for handler in bot.message_handlers:
         if hasattr(handler, 'commands'):
@@ -427,6 +493,9 @@ def welcome_plan(message):
 🍁 /broadcast : Broadcast a Message.
 🍁 /clearlogs : Clear The Logs File.
 🍁 /clearusers : Clear The USERS File.
+💳 Redeem Code System:
+✅ /gen <count> <days> - Generate bulk codes.
+✅ /redeem <code> - Activate access.
 '''
     bot.reply_to(message, response)
 
