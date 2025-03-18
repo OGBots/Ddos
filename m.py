@@ -16,6 +16,9 @@ admin_id = ["6459253633"]
 # File to store allowed user IDs
 USER_FILE = "users.txt"
 
+# Dictionary to store user access information
+user_access = {}
+
 # File to store command logs
 LOG_FILE = "log.txt"
 
@@ -66,7 +69,7 @@ def redeem_code(message):
         stored_code, expiry = line.strip().split()
         if stored_code == code:
             found = True
-            user_access[user_id] = expiry
+            user_access[user_id] = expiry  # 🚨 This was causing the error
             bot.reply_to(message, f"✅ Redeemed! Access granted until {expiry}.")
         else:
             new_codes.append(line)
@@ -77,12 +80,21 @@ def redeem_code(message):
     else:
         bot.reply_to(message, "Invalid or already used code.")
 
+
 # Check access command
 @bot.message_handler(commands=['myinfo'])
 def check_access(message):
     user_id = str(message.chat.id)
     expiry = user_access.get(user_id, "No active access")
-    bot.reply_to(message, f"Your access expires on: {expiry}")
+    
+    # If user has no active access, give a proper message
+    if expiry == "No active access":
+        response = "❌ You don't have any active access. Please redeem a code using /redeem <code>."
+    else:
+        response = f"✅ Your access expires on: {expiry}."
+    
+    bot.reply_to(message, response)
+
 
 
 # Function to read user IDs from the file
@@ -434,7 +446,7 @@ def show_help(message):
 TeamOG GLADIATOR ☠️
 '''
     bot.reply_to(message, help_text)
-'''
+    
     for handler in bot.message_handlers:
         if hasattr(handler, 'commands'):
             if message.text.startswith('/help'):
@@ -498,7 +510,6 @@ def welcome_plan(message):
 ✅ /redeem <code> - Activate access.
 '''
     bot.reply_to(message, response)
-
 
 @bot.message_handler(commands=['broadcast'])
 def broadcast_message(message):
