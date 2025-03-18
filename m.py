@@ -4,11 +4,13 @@ import telebot
 import subprocess
 import datetime
 import os
+import random
+import string
 
 from keep_alive import keep_alive
 keep_alive()
 # insert your Telegram bot token here
-bot = telebot.TeleBot('7606194904:AAHa7T4OdT9OWzKRHEQZrigdmkkUUDu6is8')
+bot = telebot.TeleBot('7606194904:AAH47sd9e3f25mxDce6-CqzW0tQJlwdyXdo')
 
 # Admin user IDs
 admin_id = ["6459253633"]
@@ -16,11 +18,17 @@ admin_id = ["6459253633"]
 # File to store allowed user IDs
 USER_FILE = "users.txt"
 
+CODES_FILE = "codes.txt"
+
 # Dictionary to store user access information
 user_access = {}
 
 # File to store command logs
 LOG_FILE = "log.txt"
+
+# Function to generate codes
+import random
+import string
 
 # Function to generate codes
 def generate_codes(count, days):
@@ -32,22 +40,36 @@ def generate_codes(count, days):
     
     with open(CODES_FILE, "a") as file:
         file.writelines(codes)
+
     return codes
 
 # Command for admin to generate redeem codes
 @bot.message_handler(commands=['gen'])
 def generate_command(message):
     user_id = str(message.chat.id)
+    
     if user_id in admin_id:
+        command_parts = message.text.split()
+        
+        if len(command_parts) != 3:
+            bot.reply_to(message, "⚠️ Usage: /gen <count> <days>")
+            return
+
         try:
-            _, count, days = message.text.split()
-            count, days = int(count), int(days)
+            count = int(command_parts[1])
+            days = int(command_parts[2])
             codes = generate_codes(count, days)
-            bot.reply_to(message, "Generated Codes:\n" + '\n'.join(codes))
-        except:
-            bot.reply_to(message, "Usage: /gen <count> <days>")
+
+            if codes:
+                bot.reply_to(message, "✅ Generated Codes:\n" + ''.join(codes))
+            else:
+                bot.reply_to(message, "❌ Failed to generate codes.")
+
+        except ValueError:
+            bot.reply_to(message, "❌ Invalid format! Use: /gen <count> <days>")
     else:
-        bot.reply_to(message, "You are not authorized to generate codes.")
+        bot.reply_to(message, "❌ You are not authorized to generate codes.")
+
 
 # Command for users to redeem codes
 @bot.message_handler(commands=['redeem'])
@@ -445,16 +467,6 @@ def show_help(message):
 💰 Buy access: @SatsNova
 TeamOG GLADIATOR ☠️
 '''
-    bot.reply_to(message, help_text)
-    
-    for handler in bot.message_handlers:
-        if hasattr(handler, 'commands'):
-            if message.text.startswith('/help'):
-                help_text += f"{handler.commands[0]}: {handler.doc}\n"
-            elif handler.doc and 'admin' in handler.doc.lower():
-                continue
-            else:
-                help_text += f"{handler.commands[0]}: {handler.doc}\n"
     bot.reply_to(message, help_text)
 
 @bot.message_handler(commands=['start'])
