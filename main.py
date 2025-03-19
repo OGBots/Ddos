@@ -2,7 +2,6 @@ from flask import Flask
 from threading import Thread
 import time
 import subprocess
-from pynput.keyboard import Controller
 
 app = Flask(__name__)
 
@@ -17,23 +16,21 @@ def keep_alive():
     t = Thread(target=run_flask)
     t.start()
 
-def start_bot():
-    print("Starting bot...")
-    subprocess.Popen(["python3", "bot.py"])  # Bot ko run karega
+def start_script():
+    print("Starting m.py...")
+    subprocess.Popen(["python3", "m.py"])  # Run m.py
 
-def auto_spacebar():
-    keyboard = Controller()
+# Idle prevention function (fake activity)
+def prevent_idle():
     while True:
-        keyboard.press(" ")
-        keyboard.release(" ")
-        print("Spacebar pressed!")
-        time.sleep(10)  # Har 10 sec me spacebar press karega
+        print("Preventing VPS from going idle...")
+        time.sleep(30)  # Wait for 5 minutes (adjust as needed)
 
-# Flask Server Start Karo
+# Start keep-alive server
 keep_alive()
 
-# Bot Start Karo
-start_bot()
+# Start your main script (m.py)
+start_script()
 
-# Auto Spacebar Start Karo
-auto_spacebar()
+# Start anti-idle function
+prevent_idle()
